@@ -24,3 +24,17 @@ After that it goes through every frame of the .swf file and copies the matrix va
 
 ## Additional Info
 In this project I use the SWF-Library from https://github.com/jindrapetrik/jpexs-decompiler 
+
+If you wish to run this locally you will need to grab the following libraries from the project linked above:
+* avi
+* cmykjpeg
+* flashdebugger
+* gif
+* gnujpdf
+* graphs
+* jl1.0.1
+* jpacker
+* LZMA
+* nellymoser
+* sfntly
+* ttf
