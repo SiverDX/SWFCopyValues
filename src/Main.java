@@ -4,6 +4,18 @@ import com.jpexs.decompiler.flash.tags.Tag;
 import com.jpexs.decompiler.flash.timeline.Frame;
 import com.jpexs.decompiler.flash.timeline.Timeline;
 import com.jpexs.decompiler.flash.types.MATRIX;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,22 +27,90 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class Main {
+public class Main extends Application {
 
-    public static void main(String[] args) {
-        new Main();
+    private String referenceDirectoryPath;
+    private String toChangeDirectoryPath;
+    private String outputDirectoryPath;
+
+    private TextArea console;
+    private Button startProcessButton;
+
+    @Override
+    public void start(final Stage stage) throws Exception {
+        console = new TextArea();
+
+        startProcessButton = new Button("Start");
+        startProcessButton.setOnAction(event -> {
+            if (!referenceDirectoryPath.isEmpty() && !toChangeDirectoryPath.isEmpty() && !outputDirectoryPath.isEmpty()) {
+                startProcessButton.setDisable(true);
+
+                Thread thread = new Thread(this::process);
+                thread.start();
+            } else {
+                printToConsole("All directories have to be selected first");
+            }
+        });
+
+        HBox referenceContent = setUpSubContent(stage, "Reference");
+        HBox toChangeContent = setUpSubContent(stage, "To Change");
+        HBox outputContent = setUpSubContent(stage, "Output");
+
+        VBox content = new VBox(15);
+        content.setAlignment(Pos.CENTER);
+        content.setPadding(new Insets(15, 15, 15, 15));
+        content.getChildren().addAll(referenceContent, toChangeContent, outputContent, startProcessButton, console);
+
+        Scene scene = new Scene(content, 640, 360);
+
+        stage.setScene(scene);
+        stage.show();
     }
 
-    public Main() {
-        File referenceDirectory = new File("reference");
-        File toChangeDirectory = new File("toChange");
+    private HBox setUpSubContent(final Stage stage, final String type) {
+        HBox content = new HBox(15);
 
-        String userDirectory = System.getProperty("user.dir");
+        content.setAlignment(Pos.CENTER);
+
+        TextField textField = new TextField();
+        textField.setPromptText(type);
+
+        Button directoryChooser = new Button("Choose Directory");
+        directoryChooser.setOnAction(event -> {
+            File file = new DirectoryChooser().showDialog(stage);
+
+            if (file != null) {
+                textField.setText(file.getAbsolutePath());
+
+                String path = file.getAbsolutePath();
+
+                switch (type) {
+                    case "Reference":
+                        referenceDirectoryPath = path;
+                        break;
+                    case "To Change":
+                        toChangeDirectoryPath = path;
+                        break;
+                    case "Output":
+                        outputDirectoryPath = path;
+                        break;
+                }
+            }
+        });
+
+        content.getChildren().addAll(textField, directoryChooser);
+
+        return content;
+    }
+
+    private void process() {
+        File referenceDirectory = new File(referenceDirectoryPath);
+        File toChangeDirectory = new File(toChangeDirectoryPath);
 
         Map<String, File[]> files = new HashMap<>();
 
         try {
-            Files.list(Paths.get(userDirectory + File.separator + toChangeDirectory)).forEach(path -> {
+            Files.list(Paths.get(toChangeDirectory.toString())).forEach(path -> {
                 Path fileName = path.getFileName();
                 String fileNameToCheck = fileName.toString();
 
@@ -38,16 +118,18 @@ public class Main {
                     fileNameToCheck = "HUDMenu.swf";
                 }
 
-                File toCheck = new File(userDirectory + File.separator + referenceDirectory + File.separator + fileNameToCheck);
+                File toCheck = new File(referenceDirectory + File.separator + fileNameToCheck);
 
                 if (toCheck.exists()) {
                     files.put(fileName.toString(), new File[]{path.toFile(), toCheck});
                 } else {
-                    System.out.println("No reference file was found for: " + fileName);
+                    printToConsole("No reference file was found for: " + fileName);
                 }
             });
+
+            printToConsole("");
         } catch (IOException e) {
-            e.printStackTrace();
+            printToConsole(e.toString());
         }
 
         Set<String> keys = files.keySet();
@@ -66,9 +148,12 @@ public class Main {
                 // Overwrite with the reference data
                 procesSWF(key, referenceData, toChange);
             } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
+                printToConsole(e.toString());
             }
         }
+
+        printToConsole("Process is finished");
+        Platform.runLater(() -> startProcessButton.setDisable(false));
     }
 
     private int xMax;
@@ -83,6 +168,8 @@ public class Main {
         } else {
             swf.displayRect.Xmax = xMax;
             swf.displayRect.Ymax = yMax;
+            printToConsole(swf.toString());
+            printToConsole("New header values (x / y): " + xMax + " / " + yMax);
             swf.setModified(true);
         }
 
@@ -107,13 +194,21 @@ public class Main {
         }
 
         if (swf.isModified()) {
-            System.out.println(swf);
-            System.out.println(referenceData);
-            System.out.println();
-
-            FileOutputStream output = new FileOutputStream("output" + File.separator + key);
+            printToConsole(referenceData.toString());
+            printToConsole("");
+            FileOutputStream output = new FileOutputStream(outputDirectoryPath + File.separator + key);
             swf.saveTo(output);
             output.close();
         }
+    }
+
+    private void printToConsole(final String text) {
+        Platform.runLater(() -> {
+            if (console.getText().isEmpty()) {
+                console.setText(text);
+            } else {
+                console.setText(console.getText() + "\n" + text);
+            }
+        });
     }
 }
