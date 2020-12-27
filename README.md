@@ -1,9 +1,10 @@
 # SWFCopyValues
-Used for Fallout 4 to fix 21:9 resolution problems
+Used for Fallout 4 to fix 21:9 (or any other than 16:9) resolution problems
 
-Required are the files that are supposed to be changed (from 16:9 to 21:9) and reference .swf files
+You will need .swf files that have already been changed (resolution wise) to look correct
+For 21:9 I recommend using these: https://www.nexusmods.com/fallout4/mods/24630
 
-Usually one can just use the .swf files form this mod: https://www.nexusmods.com/fallout4/mods/24630, it should cover everything
+The other thing that is required, is knowing which .swf files get replaced by a mod (that is not just there to fix resolution problems)
 
 ## Reason why we can't just use old mods that fix the resolution
 Other mods (like Horizon, BetterConsole, ...) add additional functionalities in these mods (like tags / icons)
@@ -12,8 +13,8 @@ Unless the 21:9 resolution mod is very recently built (and has compatibility wit
 
 ## How it works
 There are three directories:
-* Reference: The reference files (for example from Truby9s mod)
-* To Change: The files that are loaded in your game, that have the correct functionality (but wrong resolution)
+* Reference: The reference .swf files (for example from Truby9s mod)
+* To Change: The .swf files that are loaded in your game, that have the correct functionality (but wrong resolution)
 * Output: The output (as in new files with the functionality and correct resolution)
 
 As a first step the program copies the header values for maximum y and x (which determines the resolution of the .swf file)
