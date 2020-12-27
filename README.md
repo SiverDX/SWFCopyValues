@@ -2,6 +2,7 @@
 Used for Fallout 4 to fix 21:9 (or any other than 16:9) resolution problems
 
 You will need .swf files that have already been changed (resolution wise) to look correct
+
 For 21:9 I recommend using these: https://www.nexusmods.com/fallout4/mods/24630
 
 The other thing that is required, is knowing which .swf files get replaced by a mod (that is not just there to fix resolution problems)
