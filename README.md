@@ -12,15 +12,15 @@ Unless the 21:9 resolution mod is very recently built (and has compatibility wit
 
 ## How it works
 There are three directories:
-* The files that are loaded in your game, that have the correct functionality (but wrong resolution)
-* The reference files (for example from Truby9s mod)
-* The output
+* Reference: The reference files (for example from Truby9s mod)
+* To Change: The files that are loaded in your game, that have the correct functionality (but wrong resolution)
+* Output: The output (as in new files with the functionality and correct resolution)
 
 As a first step the program copies the header values for maximum y and x (which determines the resolution of the .swf file)
 
 After that it goes through every frame of the .swf file and copies the matrix values 
 
-(these have often changed translateX values due to the wider scren)
+(these have often changed translateX values due to the wider screen - sometimes some other stuff is changed as well)
 
 ## Additional Info
 In this project I use the SWF-Library from https://github.com/jindrapetrik/jpexs-decompiler 
