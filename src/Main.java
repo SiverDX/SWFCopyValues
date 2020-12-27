@@ -73,7 +73,21 @@ public class Main extends Application {
         content.setAlignment(Pos.CENTER);
 
         TextField textField = new TextField();
+        textField.setId(type);
         textField.setPromptText(type);
+        textField.textProperty().addListener((observable, oldValue, newValue) -> {
+            switch (textField.getId()) {
+                case "Reference":
+                    referenceDirectoryPath = newValue;
+                    break;
+                case "To Change":
+                    toChangeDirectoryPath = newValue;
+                    break;
+                case "Output":
+                    outputDirectoryPath = newValue;
+                    break;
+            }
+        });
 
         Button directoryChooser = new Button("Choose Directory");
         directoryChooser.setOnAction(event -> {
@@ -81,20 +95,6 @@ public class Main extends Application {
 
             if (file != null) {
                 textField.setText(file.getAbsolutePath());
-
-                String path = file.getAbsolutePath();
-
-                switch (type) {
-                    case "Reference":
-                        referenceDirectoryPath = path;
-                        break;
-                    case "To Change":
-                        toChangeDirectoryPath = path;
-                        break;
-                    case "Output":
-                        outputDirectoryPath = path;
-                        break;
-                }
             }
         });
 
@@ -135,7 +135,7 @@ public class Main extends Application {
         Set<String> keys = files.keySet();
 
         for (String key : keys) {
-            Map<String, MATRIX> referenceData = new HashMap<>();
+            Map<String, HashMap<String, MATRIX>> referenceData = new HashMap<>();
 
             File toChange = files.get(key)[0];
             File reference = files.get(key)[1];
@@ -144,9 +144,9 @@ public class Main extends Application {
                 xMax = -1;
                 yMax = -1;
                 // Build the reference data
-                procesSWF(key, referenceData, reference);
+                buildReferenceData(key, referenceData, reference);
                 // Overwrite with the reference data
-                procesSWF(key, referenceData, toChange);
+                processSWF(key, referenceData, toChange);
             } catch (IOException | InterruptedException e) {
                 printToConsole(e.toString());
             }
@@ -160,19 +160,11 @@ public class Main extends Application {
     private int xMax;
     private int yMax;
 
-    private void procesSWF(final String key, final Map<String, MATRIX> referenceData, final File reference) throws IOException, InterruptedException {
-        SWF swf = new SWF(reference.toURL().openStream(), reference.getAbsolutePath(), key, null, true, false, true, null);
+    private void buildReferenceData(final String key, final Map<String, HashMap<String, MATRIX>> referenceData, final File file) throws IOException, InterruptedException {
+        SWF swf = new SWF(file.toURL().openStream(), file.getAbsolutePath(), key, null, true, false, true, null);
 
-        if (xMax == -1) {
-            xMax = swf.displayRect.Xmax;
-            yMax = swf.displayRect.Ymax;
-        } else {
-            swf.displayRect.Xmax = xMax;
-            swf.displayRect.Ymax = yMax;
-            printToConsole(swf.toString());
-            printToConsole("New header values (x / y): " + xMax + " / " + yMax);
-            swf.setModified(true);
-        }
+        xMax = swf.displayRect.Xmax;
+        yMax = swf.displayRect.Ymax;
 
         Timeline timeline = swf.getTimeline();
 
@@ -181,17 +173,84 @@ public class Main extends Application {
                 if (innerTag instanceof PlaceObject2Tag) {
                     PlaceObject2Tag tag = (PlaceObject2Tag) innerTag;
 
-                    MATRIX matrix = referenceData.get(tag.getName());
+                    HashMap<String, MATRIX> objectData = referenceData.get(frame.toString());
+
+                    if (objectData == null) {
+                        objectData = new HashMap<>();
+                        objectData.put(tag.getName(), tag.matrix);
+
+                        referenceData.put(frame.toString(), objectData);
+                    } else {
+                        objectData = referenceData.get(frame.toString());
+                        objectData.put(tag.getName(), tag.matrix);
+                    }
+                }
+            }
+        }
+    }
+
+    private void processSWF(final String key, final Map<String, HashMap<String, MATRIX>> referenceData, final File file) throws IOException, InterruptedException {
+        SWF swf = new SWF(file.toURL().openStream(), file.getAbsolutePath(), key, null, true, false, true, null);
+
+        printToConsole(swf.toString());
+        printToConsole("New header values (x / y): " + xMax + " / " + yMax);
+
+        swf.displayRect.Xmax = xMax;
+        swf.displayRect.Ymax = yMax;
+        swf.setModified(true);
+
+        Timeline timeline = swf.getTimeline();
+
+        for (Frame frame : timeline.getFrames()) {
+            int count = 0;
+            int countReplaced = 0;
+
+            HashMap<String, MATRIX> objectData = referenceData.get(frame.toString());
+
+            if (objectData == null || objectData.isEmpty()) {
+                printToConsole("No matrix data found for replacement");
+
+                return;
+            }
+
+            for (Tag innerTag : frame.innerTags) {
+                if (innerTag instanceof PlaceObject2Tag) {
+                    count++;
+
+                    PlaceObject2Tag tag = (PlaceObject2Tag) innerTag;
+
+                    MATRIX matrix = objectData.get(tag.getName());
 
                     if (matrix == null) {
-                        referenceData.put(tag.getName(), tag.matrix);
-                    } else {
+                        Set<String> keys = objectData.keySet();
+
+                        if (keys.size() > 1) {
+                            printToConsole("There are too many object in the frame with different ids - manual process required");
+                        } else {
+                            for (String newKey : keys) {
+                                matrix = objectData.get(newKey);
+
+                                if (matrix != null) {
+                                    printToConsole("Object had different id - it should cause no issues though (there was only 1 object avaiable)");
+                                    printToConsole("Old ID: <" + newKey + "> | new ID: <" + tag.getName() + ">");
+                                } else {
+                                    // no need for replacement here - there is no matrix object available
+                                    count--;
+                                }
+                            }
+                        }
+                    }
+
+                    if (matrix != null) {
                         // Use the changed matrix object
                         tag.matrix = matrix;
+                        countReplaced++;
                         tag.setModified(true);
                     }
                 }
             }
+
+            printToConsole(frame + " | tags (matrix) replaced: " + countReplaced + " / " + count);
         }
 
         if (swf.isModified()) {
