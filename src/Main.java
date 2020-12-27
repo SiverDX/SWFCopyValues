@@ -29,9 +29,9 @@ import java.util.Set;
 
 public class Main extends Application {
 
-    private String referenceDirectoryPath;
-    private String toChangeDirectoryPath;
-    private String outputDirectoryPath;
+    private String referenceDirectoryPath = "";
+    private String toChangeDirectoryPath = "";
+    private String outputDirectoryPath = "";
 
     private TextArea console;
     private Button startProcessButton;
@@ -110,7 +110,7 @@ public class Main extends Application {
         Map<String, File[]> files = new HashMap<>();
 
         try {
-            Files.list(Paths.get(toChangeDirectory.toString())).forEach(path -> {
+            Files.list(Paths.get(toChangeDirectory.toString())).filter(path -> path.toString().endsWith(".swf")).forEach(path -> {
                 Path fileName = path.getFileName();
                 String fileNameToCheck = fileName.toString();
 
@@ -153,6 +153,7 @@ public class Main extends Application {
         }
 
         printToConsole("Process is finished");
+        printToConsole("");
         Platform.runLater(() -> startProcessButton.setDisable(false));
     }
 
