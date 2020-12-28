@@ -7,8 +7,10 @@ For 21:9 I recommend using these: https://www.nexusmods.com/fallout4/mods/24630
 
 The other thing that is required, is knowing which .swf files get replaced by a mod (that is not just there to fix resolution problems)
 
+For that you should take a look in your Mod Manager and see which .swf files get replaced by mods like Horizon or FallUI and so on - copy all of these in a new folder which you will use later on as the directory for the files that need to be changed
+
 ## Reason why we can't just use old mods that fix the resolution
-Other mods (like Horizon, BetterConsole, ...) add additional functionalities in these mods (like tags / icons)
+Other mods (like Horizon, BetterConsole, ...) add additional functionalities in these files (like tags / icons)
 
 Unless the 21:9 resolution mod is very recently built (and has compatibility with these mods) it will remove these new functionalities
 
@@ -20,9 +22,9 @@ There are three directories:
 
 As a first step the program copies the header values for maximum y and x (which determines the resolution of the .swf file)
 
-After that it goes through every frame of the .swf file and copies the matrix values 
+After that it goes through every frame of the .swf file and copies the matrix values of the objects inside those frames
 
-(these have often changed translateX values due to the wider screen - sometimes some other stuff is changed as well)
+(these often have changed translateX values due to the wider screen - sometimes some other stuff is changed as well)
 
 ## Additional Info
 In this project I use the SWF-Library from https://github.com/jindrapetrik/jpexs-decompiler 
