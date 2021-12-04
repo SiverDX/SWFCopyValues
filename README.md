@@ -26,10 +26,44 @@ After that it goes through every frame of the .swf file and copies the matrix va
 
 (these often have changed translateX values due to the wider screen - sometimes some other stuff is changed as well)
 
+## Example
+Starting the application: `java -jar SWFCopyValues.jar`
+
+**Important**: 
+
+Currently it requires `Java 8` since at some point (`Java 11`?) the `JavaFX` dependency was removed and has to be added as a dependency
+
+If your Java version is higher install `Java 8` additionally and reference it directly
+
+In my case it would then look like this: `"C:\Program Files\Java\jre1.8.0_311\bin\java" -jar SWFCopyValues.jar`
+
+---
+This is how the actual application looks like
+
+You can see that you will have to select three directories - these are explained above
+![](./documentation/application.png)
+
+---
+Here is an example on how it would like
+![](./documentation/application_selected_folders.png)
+
+---
+This is how you decide which .swf files to change
+
+In here you can see that the mod organizer tool shows which .swf files (stored in `/interface/`) are provided by various mods (e. g. `Horizon`)
+![](./documentation/mod_organizer_without_truby9.png)
+
+Adding a mod that fixes the resoultion problems shows that it overrides these .swf files (if the load order is properly configured)
+![](./documentation/mod_organizer_truby9_override.png)
+
+This would fix the resolution problems but remove the added features from the mods (e. g. `Horizon`)
+
+That is why these .swf files will have to be changed by this application
+
 ## Additional Info
 In this project I use the SWF-Library from https://github.com/jindrapetrik/jpexs-decompiler 
 
-If you wish to run this locally you will need to grab the following libraries from the project linked above:
+If you wish to run this locally (not using the .jar in 'Releases') you will need to grab the following libraries from the project linked above:
 * avi
 * cmykjpeg
 * flashdebugger
